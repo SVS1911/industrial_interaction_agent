@@ -1,59 +1,134 @@
-# ================================
-# Frontend - React + Vite
-# ================================
+# ==========================================
+# INDUSTRY INTERACTION AGENT
+# ==========================================
 
-# Dependencies
-node_modules/
+# ==========================================
+# FRONTEND - React + Vite
+# ==========================================
+
+# Node dependencies
+frontend/node_modules/
 
 # Production build
-dist/
-build/
+frontend/dist/
+frontend/build/
 
 # Vite cache
-.vite/
+frontend/.vite/
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Frontend logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/*.log
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+
+# ==========================================
+# BACKEND / AGENTS - Python
+# ==========================================
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python logs
 *.log
 
-# Coverage
-coverage/
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# Cache / temporary files
-.cache/
-.tmp/
-temp/
 
-# OS files
-.DS_Store
-Thumbs.db
+# ==========================================
+# ENVIRONMENT VARIABLES & SECRETS
+# ==========================================
 
-# IDE files
+.env
+.env.*
+!.env.example
+
+
+# ==========================================
+# IDE / EDITOR
+# ==========================================
+
 .vscode/
 .idea/
 
-# Editor temporary files
+# Temporary editor files
 *.swp
 *.swo
 *~
 
-# Local uploads
-uploads/
 
-# Generated files
+# ==========================================
+# OPERATING SYSTEM
+# ==========================================
+
+.DS_Store
+Thumbs.db
+
+
+# ==========================================
+# TEMPORARY FILES
+# ==========================================
+
+tmp/
+temp/
+.cache/
+
+
+# ==========================================
+# UPLOADED FILES
+# ==========================================
+
+uploads/
+backend/uploads/
+frontend/uploads/
+
+# User-uploaded documents
+*.tmp
+
+
+# ==========================================
+# LOCAL DATABASE FILES
+# ==========================================
+
+*.sqlite
+*.sqlite3
+*.db
+
+
+# ==========================================
+# GENERATED DATA / REPORTS
+# ==========================================
+
 *.csv
 *.xlsx
 
-# Secrets / certificates
+
+# ==========================================
+# SECURITY / CERTIFICATES
+# ==========================================
+
 *.pem
 *.key
+
+
+# ==========================================
+# BUILD / GENERATED ARTIFACTS
+# ==========================================
+
+dist/
+build/
