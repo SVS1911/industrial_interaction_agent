@@ -2,6 +2,7 @@
 # INDUSTRY INTERACTION AGENT
 # ==========================================
 
+
 # ==========================================
 # FRONTEND - React + Vite
 # ==========================================
@@ -97,7 +98,7 @@ uploads/
 backend/uploads/
 frontend/uploads/
 
-# User-uploaded documents
+# User-uploaded temporary documents
 *.tmp
 
 
