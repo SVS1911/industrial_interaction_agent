@@ -203,3 +203,32 @@ and contains PostgreSQL extensions, functions, triggers, views, grants and a tra
 It also defines demo "today" as 2026-09-11.
 
 Do not run the initializer against production.
+
+## Frontend integration
+
+The repository also contains a React/Vite frontend. The connected frontend uses the
+Agent 28 read views and API resources rather than importing `frontend/src/data/mockData.js`.
+See the project-root `FRONTEND_BACKEND_CONNECTION.md` for the integration map and current
+implementation boundaries.
+
+## First real Agent 28 execution: Engagement Health
+
+The backend now contains the first real Agent 28 execution path. It is deliberately **rule-based**, not an LLM, because the SQL source of truth already defines the active `health-1.0` model and its weights.
+
+Run it with:
+
+```text
+POST http://127.0.0.1:8000/api/agents/engagement-health/run?as_of_date=2026-09-11
+```
+
+The run:
+
+1. Reads live partner, activity, MoU/deliverable, internship, offer, and industry-activity feedback data.
+2. Calculates the five health components from the `health-1.0` rules.
+3. Classifies each partner as `STRONG`, `STABLE`, `AT_RISK`, or `DORMANT`.
+4. Writes `agentops.agent_run` and `agentops.agent_run_input`.
+5. Writes/updates `engagement.partner_health_snapshot`.
+6. Writes one `CLASSIFICATION` record per processed partner in `agentops.agent_output`.
+7. Updates the partner's `engagement_score` and `last_activity_on`.
+
+The endpoint response contains the generated agent outputs directly. This is the first actual execution path; no fake LLM output is used.

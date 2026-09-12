@@ -31,6 +31,7 @@ from app.api.routes.human_reviews import router as human_reviews_router
 from app.api.routes.alerts import router as alerts_router
 from app.api.routes.action_items import router as action_items_router
 from app.api.routes.views import router as views_router
+from app.api.routes.agents import router as agents_router
 
 
 app = FastAPI(
@@ -76,6 +77,7 @@ app.include_router(human_reviews_router)
 app.include_router(alerts_router)
 app.include_router(action_items_router)
 app.include_router(views_router)
+app.include_router(agents_router)
 
 
 @app.get("/")
