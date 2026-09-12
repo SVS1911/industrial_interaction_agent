@@ -3,7 +3,7 @@
 ## What this backend does
 
 This is the FastAPI/PostgreSQL backend foundation for Agent 28 — Industry Interaction Agent.
-The uploaded SQL file is retained unchanged as the database source of truth. The backend
+The PostgreSQL SQL file in `backend/database/agent28_synthetic_database.sql` remains the database source of truth; Agent 4 adds only a model-registry row to that existing schema. The backend
 does not recreate the database with SQLAlchemy or an ORM.
 
 The SQL defines 13 PostgreSQL schemas and Agent 28 data covering industry partners,
@@ -210,6 +210,50 @@ The repository also contains a React/Vite frontend. The connected frontend uses 
 Agent 28 read views and API resources rather than importing `frontend/src/data/mockData.js`.
 See the project-root `FRONTEND_BACKEND_CONNECTION.md` for the integration map and current
 implementation boundaries.
+
+## Agent 4 — Intelligence & Recommendations
+
+The repository now contains a deterministic Agent 4 runtime at:
+
+```text
+backend/app/services/intelligence_recommendations_agent.py
+```
+
+API:
+
+```text
+POST /api/agents/intelligence-recommendations/run
+```
+
+Agent 4 reads the existing PostgreSQL engagement data and Agent 3 health snapshots. It writes
+`agentops.agent_run`, `agentops.agent_run_input` and `agentops.agent_output` records. It does not
+call an LLM and it does not execute the recommended business actions. Recommendations are stored
+with `requires_approval = true` and `approval_status = PENDING`.
+
+### Existing database migration
+
+Agent 4 uses the model registry version `recommendation-1.0`. If the existing Supabase database
+was initialized before this version was added, apply this migration once using PostgreSQL/psql:
+
+```powershell
+psql "$env:DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/002_agent4_recommendation_model.sql
+```
+
+Fresh database initialization also includes this model registry row. Do not replace or recreate
+an existing Supabase database merely to install the model row.
+
+### Swagger
+
+After starting FastAPI, open:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+and execute `POST /api/agents/intelligence-recommendations/run`.
+
+The existing Recommendations page has a `Run Agent 4` control and continues to consume
+`GET /api/agent-outputs?limit=200`; no frontend framework or database replacement was introduced.
 
 ## First real Agent 28 execution: Engagement Health
 
