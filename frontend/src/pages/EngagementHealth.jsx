@@ -1,12 +1,17 @@
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
-import { health } from "../data/mockData";
+import { api } from "../services/api";
+import useApiData, { ErrorState, LoadingState } from "../hooks/useApiData";
 import { formatDate } from "../utils/formatters";
 
 export default function EngagementHealth() {
+  const { data: healthData, loading, error } = useApiData(() => api.getHealth(), []);
+  const health = healthData ?? [];
   return <>
     <PageHeader eyebrow="AGENT 3 · ENGAGEMENT HEALTH" title="Engagement Health" description="Rule-based relationship health using recency, activity volume, outcomes, deliverables, feedback and renewal risk." />
-    <div className="health-grid">
+    {loading && <LoadingState message="Loading partner health from the backend…" />}
+    {error && <ErrorState message={`Backend connection failed: ${error}`} />}
+    {!loading && !error && <div className="health-grid">
       {health.map(h => (
         <div className="health-card" key={h.partnerId}>
           <div className="health-card-top">
@@ -24,11 +29,11 @@ export default function EngagementHealth() {
             <Metric label="Offers · 12m" value={h.offers12m} />
             <Metric label="Active MoUs" value={h.activeMou} />
             <Metric label="Deliverables" value={`${h.achieved}/${h.achieved+h.due}`} />
-            <Metric label="Feedback" value={h.feedback ? h.feedback.toFixed(1) : "—"} />
+            <Metric label="Feedback" value={h.feedback == null ? "—" : h.feedback.toFixed(1)} />
           </div>
         </div>
       ))}
-    </div>
+    </div>}
   </>;
 }
 function Metric({label,value}) { return <div><span>{label}</span><strong>{value}</strong></div>; }

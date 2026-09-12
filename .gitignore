@@ -1,36 +1,349 @@
+# ============================================================
+# INDUSTRY INTERACTION AGENT
+# Root .gitignore
+# ============================================================
 
-# Backend secrets
-backend/.env
 
-# Python
-venv/
-.venv/
-__pycache__/
-*.pyc
-.pytest_cache/
+# ============================================================
+# 🔐 ENVIRONMENT VARIABLES / SECRETS
+# ============================================================
 
-# Frontend
-frontend/node_modules/
-frontend/.vite/
-frontend/dist/
-
-# Environment files
 .env
 .env.*
 !.env.example
 
-# Databases
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Secrets / credentials
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+service-account*.json
+
+
+# ============================================================
+# 🐍 PYTHON / FASTAPI BACKEND
+# ============================================================
+
+# Python virtual environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Python compiled files
+*.pyc
+*.pyo
+*.pyd
+
+# Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Python tools
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# ============================================================
+# 🗄️ DATABASE / LOCAL DATA
+# ============================================================
+
+# SQLite
 *.db
 *.sqlite
 *.sqlite3
 
-# Logs
+# Local database folders
+database/
+databases/
+db_data/
+
+# PostgreSQL local dumps
+*.dump
+*.sql.bak
+
+# Generated/local data
+data/
+datasets/
+storage/
+uploads/
+
+
+# ============================================================
+# 📁 TEMPORARY / GENERATED FILES
+# ============================================================
+
+tmp/
+temp/
+.cache/
+.cache-loader/
+
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+
+
+# ============================================================
+# 📝 LOGS
+# ============================================================
+
 *.log
+logs/
+log/
 
-# IDE
+
+# ============================================================
+# ⚛️ REACT / VITE FRONTEND
+# ============================================================
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Vite
+.vite/
+**/.vite/
+
+# Production builds
+dist/
+**/dist/
+
+# React build
+build/
+**/build/
+
+# npm
+npm-debug.log*
+npm-error.log*
+
+# Yarn
+yarn-debug.log*
+yarn-error.log*
+yarn-error.log
+
+# pnpm
+pnpm-debug.log*
+pnpm-error.log*
+
+
+# ============================================================
+# 📦 PACKAGE MANAGER
+# ============================================================
+
+# Optional package manager caches
+.npm/
+.yarn/
+.pnpm-store/
+
+# Do NOT ignore these:
+# package.json
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+
+# ============================================================
+# 🧪 TESTING
+# ============================================================
+
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Test-generated files
+test-results/
+test-output/
+coverage/
+
+
+# ============================================================
+# 🤖 AI / ML GENERATED FILES
+# ============================================================
+
+# Model files
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.safetensors
+
+# ML experiment outputs
+mlruns/
+wandb/
+runs/
+checkpoints/
+
+# Vector databases / embeddings
+chroma/
+chroma_db/
+.faiss/
+*.faiss
+
+
+# ============================================================
+# 🖥️ IDE / EDITORS
+# ============================================================
+
+# VS Code
 .vscode/
-.idea/
 
-# OS
-.DS_Store
+# Keep useful shared VS Code configuration if you want it
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+
+
+# ============================================================
+# 🪟 OPERATING SYSTEM FILES
+# ============================================================
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+
+
+# ============================================================
+# 🔑 SSH / LOCAL CONFIG
+# ============================================================
+
+.ssh/
+*.pem
+*.pub
+
+
+# ============================================================
+# 🐳 DOCKER
+# ============================================================
+
+# Docker local overrides
+docker-compose.override.yml
+
+# Docker environment
+.docker.env
+
+# Docker volumes
+docker-volumes/
+docker-data/
+
+
+# ============================================================
+# ☁️ CLOUD / DEPLOYMENT
+# ============================================================
+
+# Vercel
+.vercel/
+
+# Netlify
+.netlify/
+
+# Render local files
+.render/
+
+# Terraform state
+.terraform/
+*.tfstate
+*.tfstate.*
+
+
+# ============================================================
+# 📊 GENERATED REPORTS / EXPORTS
+# ============================================================
+
+*.csv
+*.xlsx
+*.xls
+*.pdf
+
+# Generated reports
+reports/
+exports/
+
+
+# ============================================================
+# 🧰 LOCAL DEVELOPMENT
+# ============================================================
+
+*.local
+.local/
+.localhost/
+
+# OS/editor backup files
+*.orig
+*.rej
+
+
+# ============================================================
+# 🚫 PROJECT-SPECIFIC SECRET / PRIVATE FILES
+# ============================================================
+
+backend/secrets/
+backend/credentials/
+backend/private/
+frontend/secrets/
+frontend/private/
+
+
+# ============================================================
+# END
+# ============================================================

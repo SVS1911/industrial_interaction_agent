@@ -55,24 +55,32 @@ Important SQL objects represented in the UI:
 
 The frontend does **not** create or modify the PostgreSQL schema.
 
-## Mock data
+## Backend connection
 
-Mock data is deliberately small and only exists to make the frontend demonstrable before the backend is connected.
+The main UI pages are now connected to the FastAPI backend. `src/services/api.js` calls the real Agent 28 endpoints and normalizes PostgreSQL/view field names for the existing components.
 
-Replace `src/data/mockData.js` usage with the API functions in:
+Backend base URL:
 
-`src/services/api.js`
+```text
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
 
-The API boundary already expects routes such as:
+If the variable is not present, the frontend uses `http://127.0.0.1:8000` by default. See `.env.example`.
 
-- `GET /api/industry/partners`
-- `GET /api/industry/mous`
-- `GET /api/industry/mous/:id`
-- `GET /api/industry/activities`
-- `GET /api/industry/health`
-- `GET /api/industry/recommendations`
-- `GET /api/industry/evidence`
-- `POST /api/industry/mous/upload`
+Connected data sources include:
+
+- `GET /api/views/partner-register`
+- `GET /api/views/partner-health-latest`
+- `GET /api/views/mou-tracker`
+- `GET /api/views/deliverable-status`
+- `GET /api/views/activity-calendar`
+- `GET /api/agent-outputs`
+- `GET /api/agent-runs`
+- `GET /api/partners/{id}`
+
+`src/data/mockData.js` is retained only as a development fixture. Connected pages no longer import it.
+
+The current backend does not yet provide real MoU upload/AI extraction, create-partner, create-activity, action-item creation, evidence export, or complete five-agent orchestration. Those UI actions are therefore not presented as working features.
 
 ## Five-agent UI mapping
 
