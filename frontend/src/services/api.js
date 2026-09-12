@@ -160,12 +160,12 @@ function mapActivity(row) {
 
 function mapRecommendation(row) {
   const payload = row.payload && typeof row.payload === "object" ? row.payload : {};
-  const company = payload.company || payload.partner || row.subject_type || "Unknown target";
+  const company = payload.partner_name || payload.company || payload.partner || row.subject_type || "Unknown target";
   const suggested = payload.suggested_first_step || payload.action || "Review the recommendation and decide the next step.";
   const status = row.approval_status || "NOT_REQUIRED";
   return {
     id: row.agent_output_id,
-    priority: status === "PENDING" ? "HIGH" : status === "MODIFIED" ? "MEDIUM" : "LOW",
+    priority: payload.priority || (status === "PENDING" ? "HIGH" : status === "MODIFIED" ? "MEDIUM" : "LOW"),
     title: payload.title || `Target partnership: ${company}`,
     reason: row.reasoning_summary || "Agent-generated recommendation stored in Agent 28.",
     action: suggested,
@@ -271,6 +271,11 @@ export const api = {
     return itemsFrom(healthPayload)
       .map((row) => mapHealth(row, partnerById))
       .sort((a, b) => b.score - a.score);
+  },
+
+  async runIntelligenceRecommendations(asOfDate) {
+    const query = asOfDate ? `?as_of_date=${encodeURIComponent(asOfDate)}` : "";
+    return request(`/api/agents/intelligence-recommendations/run${query}`, { method: "POST" });
   },
 
   async getRecommendations() {
