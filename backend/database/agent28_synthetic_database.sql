@@ -2968,6 +2968,16 @@ VALUES (pg_temp.uid('model:health-1.0'), pg_temp.uid('agent:A28'), 'health-1.0',
  '{"note": "Subject is an organisation; no person-level protected attributes are used."}',
  '2024-06-01', '2025-08-31', '2025-09-20', pg_temp.uid('user:dean.academics'), 'ACTIVE');
 
+-- Agent 4 deterministic recommendation model.
+INSERT INTO agentops.model_version (model_version_id, agent_id, version, model_type, feature_list, excluded_features, validated_on, status)
+SELECT gen_random_uuid(), a.agent_id, 'recommendation-1.0', 'RULE_BASED',
+       '{"purpose":"Deterministic partner-level industry interaction recommendations","priority_bands":["CRITICAL","HIGH","MEDIUM","LOW"]}'::jsonb,
+       '{"note":"No protected personal attributes are used. Student-level identifiers are not used in recommendation outputs."}'::jsonb,
+       NULL, 'ACTIVE'
+FROM agentops.agent a
+WHERE a.code = 'A28_INDUSTRY_INTERACTION' AND a.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM agentops.model_version mv WHERE mv.agent_id = a.agent_id AND mv.version = 'recommendation-1.0');
+
 INSERT INTO agentops.schedule (schedule_id, agent_id, cron_expression, scope, push_to_role_id, response_expected_hours, is_active, last_run_at, next_run_at)
 VALUES (pg_temp.uid('schedule:A28:monthly'), pg_temp.uid('agent:A28'), '30 1 L * *',
         '{"sweep": ["health_snapshot","dormancy","mou_expiry","deliverable_risk","fulfilment_matching"]}',

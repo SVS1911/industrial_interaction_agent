@@ -6,13 +6,37 @@ import useApiData, { ErrorState, LoadingState } from "../hooks/useApiData";
 import Icon from "../components/Icons";
 
 export default function Recommendations() {
-  const { data: recommendationsData, loading, error } = useApiData(() => api.getRecommendations(), []);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { data: recommendationsData, loading, error } = useApiData(() => api.getRecommendations(), [refreshKey]);
   const recommendations = recommendationsData ?? [];
   const [selectedId, setSelectedId] = useState(null);
+  const [running, setRunning] = useState(false);
+  const [runError, setRunError] = useState("");
+
+  async function runAgent() {
+    setRunning(true);
+    setRunError("");
+    try {
+      await api.runIntelligenceRecommendations();
+      setRunning(false);
+      setSelectedId(null);
+      setRefreshKey((value) => value + 1);
+    } catch (err) {
+      setRunError(err?.message || "Unable to run Agent 4.");
+      setRunning(false);
+    }
+  }
   const selected = recommendations.find((r) => r.id === selectedId) || recommendations[0];
 
   return <>
-    <PageHeader eyebrow="AGENT 4 · INDUSTRY INTELLIGENCE" title="Recommendations" description="Review recommendations already produced and stored by Agent 28. Human approval remains authoritative for consequential actions." />
+    <PageHeader eyebrow="AGENT 4 · INDUSTRY INTELLIGENCE" title="Recommendations" description="Review deterministic recommendations produced and stored by Agent 28. Human approval remains authoritative for consequential actions." />
+    <div className="panel" style={{ marginBottom: 16, padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <div><strong>Run Intelligence & Recommendations</strong><p style={{ margin: "4px 0 0" }}>Evaluate the current PostgreSQL data and create new pending recommendations.</p></div>
+        <button className="primary-button" type="button" onClick={runAgent} disabled={running}>{running ? "Running…" : "Run Agent 4"}</button>
+      </div>
+      {runError && <div className="empty-state" style={{ marginTop: 12 }}>{runError}</div>}
+    </div>
     {loading && <LoadingState message="Loading stored recommendations from the backend…" />}
     {error && <ErrorState message={`Backend connection failed: ${error}`} />}
     {!loading && !error && <div className="recommend-layout">
