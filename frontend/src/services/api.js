@@ -256,6 +256,53 @@ export const api = {
     return { ...normalized, deliverables };
   },
 
+  async createActivity(payload) {
+    return request("/api/activities", { method: "POST", body: JSON.stringify(payload) });
+  },
+
+  async runActivitiesOutcomes(asOfDate) {
+    const query = asOfDate ? `?as_of_date=${encodeURIComponent(asOfDate)}` : "";
+    return request(`/api/agents/activities-outcomes/run${query}`, { method: "POST" });
+  },
+
+  async getAlumni() {
+    return itemsFrom(await request("/api/alumni?limit=500"));
+  },
+
+  async getGuestLectures() {
+    return itemsFrom(await request("/api/guest-lectures?limit=500"))
+      .map(row => ({
+        id: row.guest_lecture_id,
+        speakerName: row.speaker_name,
+        speakerType: row.speaker_type,
+        alumniId: row.alumni_id,
+        domain: row.domain,
+        title: row.title,
+        date: row.lecture_date,
+        endDate: row.end_date || row.lecture_date,
+        mode: row.mode || "—",
+        participants: asNumber(row.participant_count),
+        partnerId: row.industry_partner_id,
+        partner: row.partner_name || null,
+        mouId: row.mou_id,
+        mouTitle: row.mou_title || null,
+        status: row.status,
+        outcome: row.outcome_summary || null,
+        evidence: Boolean(row.evidence_ref),
+      }))
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  },
+
+  async createGuestLecture(payload) {
+    return request("/api/guest-lectures", { method: "POST", body: JSON.stringify(payload) });
+  },
+
+  async getActivitiesOutcomesReports() {
+    return itemsFrom(await request("/api/agent-outputs?limit=200"))
+      .filter(row => row.output_type === "REPORT" && row.subject_type === "INDUSTRY_ACTIVITY")
+      .map(row => ({ id: row.agent_output_id, runId: row.agent_run_id, payload: row.payload || {}, reasoning: row.reasoning_summary, createdAt: row.created_at }));
+  },
+
   async getActivities() {
     return itemsFrom(await request("/api/views/activity-calendar?limit=500"))
       .map(mapActivity)
@@ -286,6 +333,43 @@ export const api = {
       .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   },
 
+  async runAccreditationEvidence(asOfDate) {
+    const query = asOfDate ? `?as_of_date=${encodeURIComponent(asOfDate)}` : "";
+    return request(`/api/agents/accreditation-evidence/run${query}`, { method: "POST" });
+  },
+
+  async downloadAccreditationEvidenceReport() {
+    const response = await fetch(`${API_BASE}/api/agents/accreditation-evidence/report.csv`, {
+      headers: { Accept: "text/csv" },
+    });
+    if (!response.ok) {
+      let detail = `Report export failed (${response.status})`;
+      try {
+        const body = await response.json();
+        detail = body?.detail || detail;
+      } catch {}
+      throw new Error(String(detail));
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const match = disposition.match(/filename="?([^";]+)"?/i);
+    const filename = match?.[1] || "agent5-accreditation-evidence.csv";
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  },
+
+  async getAccreditationEvidenceReports() {
+    return itemsFrom(await request("/api/agent-outputs?limit=200"))
+      .filter(row => row.output_type === "REPORT" && row.subject_type === "ACCREDITATION")
+      .map(row => ({ id: row.agent_output_id, runId: row.agent_run_id, payload: row.payload || {}, reasoning: row.reasoning_summary, createdAt: row.created_at }));
+  },
+
   async getEvidence() {
     return itemsFrom(await request("/api/views/accreditation-evidence?limit=500"))
       .map(mapEvidence)
@@ -311,7 +395,39 @@ export const api = {
     return { partners, mous, activities, health, recommendations };
   },
 
-  // MoU upload is intentionally not exposed here because the current backend
-  // has no real upload/AI extraction endpoint. Keeping this absent prevents a
-  // UI button from pretending that an unfinished workflow is implemented.
+  async runMouIntelligence(mouId) {
+    const query = mouId ? `?mou_id=${encodeURIComponent(mouId)}` : "";
+    return request(`/api/agents/mou-intelligence/run${query}`, { method: "POST" });
+  },
+
+  async getMouIntelligenceReports() {
+    return itemsFrom(await request("/api/agent-outputs?limit=200"))
+      .filter((row) => row.output_type === "REPORT" && row.subject_type === "MOU")
+      .map((row) => {
+        const payload = row.payload && typeof row.payload === "object" ? row.payload : {};
+        return {
+          id: row.agent_output_id,
+          runId: row.agent_run_id,
+          mouId: payload.mou_id || row.subject_id,
+          partner: payload.partner_name || "—",
+          title: payload.title || "MoU Intelligence Report",
+          modelVersion: payload.model_version || "mou-1.0",
+          extraction: payload.extraction || {},
+          validation: payload.validation || {},
+          citations: Array.isArray(payload.citations) ? payload.citations : [],
+          confidence: row.confidence == null ? null : asNumber(row.confidence),
+          requiresReview: Boolean(payload.requires_human_review || row.requires_approval),
+          approvalStatus: row.approval_status || "NOT_REQUIRED",
+          createdAt: row.created_at,
+        };
+      })
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  },
+
+  async uploadMou(formData) {
+    return request("/api/agents/mou-intelligence/upload", {
+      method: "POST",
+      body: formData,
+    });
+  },
 };

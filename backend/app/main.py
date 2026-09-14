@@ -32,6 +32,9 @@ from app.api.routes.alerts import router as alerts_router
 from app.api.routes.action_items import router as action_items_router
 from app.api.routes.views import router as views_router
 from app.api.routes.agents import router as agents_router
+from app.api.routes.mou_intelligence_upload import router as mou_intelligence_upload_router
+from app.api.routes.agents_do_prove import router as agents_do_prove_router
+from app.api.routes.guest_lectures import router as guest_lectures_router
 
 
 app = FastAPI(
@@ -78,6 +81,9 @@ app.include_router(alerts_router)
 app.include_router(action_items_router)
 app.include_router(views_router)
 app.include_router(agents_router)
+app.include_router(mou_intelligence_upload_router)
+app.include_router(agents_do_prove_router)
+app.include_router(guest_lectures_router)
 
 
 @app.get("/")

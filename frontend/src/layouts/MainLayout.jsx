@@ -6,6 +6,7 @@ const nav = [
   { to: "/partners", label: "Industry Partners", icon: "building" },
   { to: "/mous", label: "MoU Intelligence", icon: "file" },
   { to: "/activities", label: "Activities & Outcomes", icon: "activity" },
+  { to: "/guest-lectures", label: "Guest Lectures", icon: "activity" },
   { to: "/health", label: "Engagement Health", icon: "heart" },
   { to: "/recommendations", label: "Recommendations", icon: "spark" },
   { to: "/evidence", label: "Accreditation Evidence", icon: "shield" }

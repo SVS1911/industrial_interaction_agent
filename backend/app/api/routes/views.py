@@ -14,6 +14,7 @@ VIEW_MAP = {
     "sector-gap": ("engagement", "v_sector_gap"),
     "target-partner-candidates": ("engagement", "v_target_partner_candidates"),
     "accreditation-evidence": ("engagement", "v_accreditation_evidence"),
+    "guest-lecture-register": ("engagement", "v_guest_lecture_register"),
     "kpi-latest": ("quality", "v_kpi_latest"),
 }
 

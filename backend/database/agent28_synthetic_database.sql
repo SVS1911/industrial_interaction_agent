@@ -2968,6 +2968,16 @@ VALUES (pg_temp.uid('model:health-1.0'), pg_temp.uid('agent:A28'), 'health-1.0',
  '{"note": "Subject is an organisation; no person-level protected attributes are used."}',
  '2024-06-01', '2025-08-31', '2025-09-20', pg_temp.uid('user:dean.academics'), 'ACTIVE');
 
+-- Agent 1 Gemini-backed MoU intelligence model.
+INSERT INTO agentops.model_version (model_version_id, agent_id, version, model_type, feature_list, excluded_features, validated_on, status)
+SELECT gen_random_uuid(), a.agent_id, 'mou-1.0', 'LLM_PROMPT',
+       jsonb_build_object('provider','Google Gemini','model_env','GEMINI_MODEL','purpose','Semantic extraction and evidence citation from MoU source text','structured_output',true,'deterministic_reconciliation',true),
+       jsonb_build_object('note','LLM does not write engagement tables directly; authoritative database facts are reconciled after extraction.'),
+       NULL, 'ACTIVE'
+FROM agentops.agent a
+WHERE a.code = 'A28_INDUSTRY_INTERACTION' AND a.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM agentops.model_version mv WHERE mv.agent_id = a.agent_id AND mv.version = 'mou-1.0');
+
 -- Agent 4 deterministic recommendation model.
 INSERT INTO agentops.model_version (model_version_id, agent_id, version, model_type, feature_list, excluded_features, validated_on, status)
 SELECT gen_random_uuid(), a.agent_id, 'recommendation-1.0', 'RULE_BASED',
@@ -4197,3 +4207,86 @@ FROM (
 --
 -- Deterministic IDs you can use in tests:  md5('partner:NIMBUS')::uuid, md5('mou:M04')::uuid,
 --   md5('user:iiic.head')::uuid, md5('dept:CSE')::uuid, md5('agent:A28')::uuid, md5('inst:DIET')::uuid
+
+-- ============================================================================
+-- DEDICATED GUEST LECTURE REGISTRY
+-- ============================================================================
+-- Guest lectures are tracked independently of MoUs. MoU/partner linkage is optional.
+-- Existing engagement.industry_activity rows are intentionally not modified or duplicated.
+
+CREATE TABLE IF NOT EXISTS engagement.guest_lecture (
+    guest_lecture_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    institution_id uuid NOT NULL REFERENCES core.institution,
+    speaker_name text NOT NULL,
+    speaker_type text NOT NULL DEFAULT 'INDUSTRY_EXPERT'
+        CHECK (speaker_type IN ('ALUMNI','INDUSTRY_EXPERT','ACADEMIC','OTHER')),
+    alumni_id uuid REFERENCES placement.alumni ON DELETE SET NULL,
+    speaker_person_id uuid REFERENCES people.person ON DELETE SET NULL,
+    domain text NOT NULL,
+    title text NOT NULL,
+    lecture_date date NOT NULL,
+    end_date date,
+    mode text CHECK (mode IN ('OFFLINE','ONLINE','HYBRID')),
+    participant_count smallint CHECK (participant_count IS NULL OR participant_count >= 0),
+    industry_partner_id uuid REFERENCES engagement.industry_partner ON DELETE SET NULL,
+    mou_id uuid REFERENCES engagement.mou ON DELETE SET NULL,
+    department_id uuid REFERENCES core.department ON DELETE SET NULL,
+    outcome_summary text,
+    evidence_ref uuid REFERENCES knowledge.document ON DELETE SET NULL,
+    status text NOT NULL DEFAULT 'CONDUCTED'
+        CHECK (status IN ('PLANNED','CONFIRMED','CONDUCTED','POSTPONED','CANCELLED')),
+    CHECK (end_date IS NULL OR end_date >= lecture_date),
+    CHECK (alumni_id IS NULL OR speaker_type = 'ALUMNI')
+);
+
+SELECT core.add_audit_columns('engagement.guest_lecture');
+
+CREATE INDEX IF NOT EXISTS idx_guest_lecture_date
+    ON engagement.guest_lecture (institution_id, lecture_date DESC);
+CREATE INDEX IF NOT EXISTS idx_guest_lecture_partner
+    ON engagement.guest_lecture (industry_partner_id, lecture_date DESC)
+    WHERE industry_partner_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_guest_lecture_alumni
+    ON engagement.guest_lecture (alumni_id)
+    WHERE alumni_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_guest_lecture_mou
+    ON engagement.guest_lecture (mou_id)
+    WHERE mou_id IS NOT NULL;
+
+COMMENT ON TABLE engagement.guest_lecture IS
+    'Dedicated guest-lecture registry for alumni, industry experts and other speakers. '
+    'MoU linkage is optional; this table is the source for lectures that happen outside MoU commitments.';
+
+CREATE OR REPLACE VIEW engagement.v_guest_lecture_register AS
+SELECT gl.guest_lecture_id,
+       gl.institution_id,
+       gl.speaker_name,
+       gl.speaker_type,
+       gl.alumni_id,
+       gl.speaker_person_id,
+       gl.domain,
+       gl.title,
+       gl.lecture_date,
+       gl.end_date,
+       gl.mode,
+       gl.participant_count,
+       gl.industry_partner_id,
+       ip.name AS partner_name,
+       gl.mou_id,
+       m.title AS mou_title,
+       gl.department_id,
+       d.code AS department_code,
+       gl.outcome_summary,
+       gl.evidence_ref,
+       (gl.evidence_ref IS NOT NULL) AS has_evidence,
+       gl.status,
+       gl.created_at,
+       gl.updated_at
+FROM engagement.guest_lecture gl
+LEFT JOIN engagement.industry_partner ip ON ip.industry_partner_id = gl.industry_partner_id
+LEFT JOIN engagement.mou m ON m.mou_id = gl.mou_id
+LEFT JOIN core.department d ON d.department_id = gl.department_id;
+
+GRANT SELECT, INSERT, UPDATE ON engagement.guest_lecture TO app_readwrite;
+GRANT SELECT ON engagement.v_guest_lecture_register TO app_readonly, app_readwrite;
+

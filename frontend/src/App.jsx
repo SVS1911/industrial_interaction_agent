@@ -5,6 +5,7 @@ import Partners from "./pages/Partners";
 import Mous from "./pages/Mous";
 import MouDetails from "./pages/MouDetails";
 import Activities from "./pages/Activities";
+import GuestLectures from "./pages/GuestLectures";
 import EngagementHealth from "./pages/EngagementHealth";
 import Recommendations from "./pages/Recommendations";
 import Evidence from "./pages/Evidence";
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/mous" element={<Mous />} />
         <Route path="/mous/:id" element={<MouDetails />} />
         <Route path="/activities" element={<Activities />} />
+        <Route path="/guest-lectures" element={<GuestLectures />} />
         <Route path="/health" element={<EngagementHealth />} />
         <Route path="/recommendations" element={<Recommendations />} />
         <Route path="/evidence" element={<Evidence />} />
