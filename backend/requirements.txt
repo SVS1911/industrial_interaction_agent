@@ -7,3 +7,6 @@ pydantic
 python-multipart
 pytest
 httpx
+google-genai
+
+pypdf

@@ -12,6 +12,8 @@ class Settings:
     app_port: int = int(os.getenv("APP_PORT", "8000"))
     database_url: str = os.getenv("DATABASE_URL", "")
     psql_path: str = os.getenv("PSQL_PATH", "psql")
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     cors_origins: tuple[str, ...] = (
         "http://localhost:5173",
         "http://127.0.0.1:5173",

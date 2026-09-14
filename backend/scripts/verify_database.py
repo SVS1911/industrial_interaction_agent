@@ -6,7 +6,7 @@ from psycopg import sql
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
-TABLES = ['engagement.industry_partner', 'engagement.partner_contact', 'engagement.partner_expertise', 'engagement.mou', 'engagement.mou_deliverable', 'engagement.mou_deliverable_fulfilment', 'engagement.mou_renewal', 'engagement.industry_activity', 'engagement.activity_course_alignment', 'engagement.partner_health_snapshot', 'placement.company', 'placement.offer', 'placement.internship', 'knowledge.document', 'agentops.agent_run', 'agentops.agent_output', 'agentops.alert', 'quality.evidence_item']
+TABLES = ['engagement.industry_partner', 'engagement.partner_contact', 'engagement.partner_expertise', 'engagement.mou', 'engagement.mou_deliverable', 'engagement.mou_deliverable_fulfilment', 'engagement.mou_renewal', 'engagement.industry_activity', 'engagement.activity_course_alignment', 'engagement.partner_health_snapshot', 'placement.company', 'placement.offer', 'placement.internship', 'knowledge.document', 'agentops.agent_run', 'agentops.agent_output', 'agentops.alert', 'quality.evidence_item', 'engagement.guest_lecture']
 
 def main():
     url = os.getenv("DATABASE_URL")
@@ -29,6 +29,14 @@ def main():
                     )
                     cur.execute(query)
                     print(f"✓ {qualified} exists — {cur.fetchone()[0]} rows")
+
+                cur.execute("SELECT to_regclass(%s)", ('engagement.v_guest_lecture_register',))
+                if cur.fetchone()[0] is None:
+                    failed = True
+                    print("✗ engagement.v_guest_lecture_register missing")
+                else:
+                    print("✓ engagement.v_guest_lecture_register exists")
+
                 return 1 if failed else 0
     except Exception as exc:
         print(f"ERROR: verification failed: {exc}")

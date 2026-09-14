@@ -3,7 +3,7 @@
 ## What this backend does
 
 This is the FastAPI/PostgreSQL backend foundation for Agent 28 — Industry Interaction Agent.
-The uploaded SQL file is retained unchanged as the database source of truth. The backend
+The PostgreSQL SQL file in `backend/database/agent28_synthetic_database.sql` remains the database source of truth; Agent 4 adds only a model-registry row to that existing schema. The backend
 does not recreate the database with SQLAlchemy or an ORM.
 
 The SQL defines 13 PostgreSQL schemas and Agent 28 data covering industry partners,
@@ -211,6 +211,50 @@ Agent 28 read views and API resources rather than importing `frontend/src/data/m
 See the project-root `FRONTEND_BACKEND_CONNECTION.md` for the integration map and current
 implementation boundaries.
 
+## Agent 4 — Intelligence & Recommendations
+
+The repository now contains a deterministic Agent 4 runtime at:
+
+```text
+backend/app/services/intelligence_recommendations_agent.py
+```
+
+API:
+
+```text
+POST /api/agents/intelligence-recommendations/run
+```
+
+Agent 4 reads the existing PostgreSQL engagement data and Agent 3 health snapshots. It writes
+`agentops.agent_run`, `agentops.agent_run_input` and `agentops.agent_output` records. It does not
+call an LLM and it does not execute the recommended business actions. Recommendations are stored
+with `requires_approval = true` and `approval_status = PENDING`.
+
+### Existing database migration
+
+Agent 4 uses the model registry version `recommendation-1.0`. If the existing Supabase database
+was initialized before this version was added, apply this migration once using PostgreSQL/psql:
+
+```powershell
+psql "$env:DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/002_agent4_recommendation_model.sql
+```
+
+Fresh database initialization also includes this model registry row. Do not replace or recreate
+an existing Supabase database merely to install the model row.
+
+### Swagger
+
+After starting FastAPI, open:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+and execute `POST /api/agents/intelligence-recommendations/run`.
+
+The existing Recommendations page has a `Run Agent 4` control and continues to consume
+`GET /api/agent-outputs?limit=200`; no frontend framework or database replacement was introduced.
+
 ## First real Agent 28 execution: Engagement Health
 
 The backend now contains the first real Agent 28 execution path. It is deliberately **rule-based**, not an LLM, because the SQL source of truth already defines the active `health-1.0` model and its weights.
@@ -232,3 +276,98 @@ The run:
 7. Updates the partner's `engagement_score` and `last_activity_on`.
 
 The endpoint response contains the generated agent outputs directly. This is the first actual execution path; no fake LLM output is used.
+
+## Agent 1 — MoU Intelligence (Google Gemini)
+
+Agent 1 uses Google Gemini for semantic extraction from MoU document chunks, then performs deterministic reconciliation against the authoritative PostgreSQL records. It writes reports to `agentops.agent_output` and does not directly mutate `engagement.mou` or `engagement.mou_deliverable`.
+
+### Gemini configuration
+
+Add these server-side variables to `backend/.env`:
+
+```env
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+GEMINI_MODEL=gemini-3.8-flash
+```
+
+Never put the Gemini key in the frontend or commit it to source control.
+
+### Install
+
+```bash
+pip install -r requirements.txt
+```
+
+### Register Agent 1 model
+
+Against the existing PostgreSQL/Supabase database:
+
+```bash
+python scripts/register_agent1_model.py
+```
+
+or apply `database/migrations/003_agent1_mou_intelligence_model.sql` using the project's normal migration process.
+
+### Run Agent 1
+
+For one MoU:
+
+```text
+POST /api/agents/mou-intelligence/run?mou_id=<UUID>
+```
+
+For all MoUs with linked source documents:
+
+```text
+POST /api/agents/mou-intelligence/run
+```
+
+The endpoint requires `GEMINI_API_KEY` and an active `mou-1.0` model registration.
+
+## Agent 1 frontend + MoU upload
+
+The React MoU Intelligence page is connected to Agent 1. It supports:
+
+- viewing stored Agent 1 reports from `agentops.agent_output`
+- running Agent 1 for one existing MoU
+- uploading a new PDF MoU from the UI
+- storing the uploaded PDF as a `knowledge.document`
+- extracting readable PDF pages into `knowledge.document_chunk`
+- creating a `knowledge.extraction_job` for provenance
+- reusing or creating the matching `engagement.industry_partner`
+- creating the new `engagement.mou` linked to the document/job
+- automatically running Agent 1 on the new MoU
+- showing Gemini extraction, reconciliation flags, confidence and citations in the MoU detail page
+
+The upload endpoint is `POST /api/agents/mou-intelligence/upload` and accepts multipart form data. PDF files with no readable text are rejected with a clear message because OCR is not currently configured.
+
+Basic MoU metadata (partner name, title, partner type and signed date) is collected by the frontend because `engagement.mou.signed_on` is a required authoritative database field. The Agent 1 report remains a report-only output and does not overwrite authoritative MoU/deliverable data.
+
+## Agent 2 and Agent 5 runtime paths
+
+Agent 2 (`activities-2.0`) is the deterministic Activities / DO agent. It connects realised industry activities and placement outcomes to matching MoUs and deliverables, creating missing fulfilment links as `AGENT_SUGGESTED` / `SUGGESTED` rather than auto-confirming them.
+
+API: `POST /api/agents/activities-outcomes/run` (optional `as_of_date`).
+
+Agent 5 (`evidence-5.0`) is the deterministic Accreditation Evidence / PROVE agent. It evaluates authoritative MoU, activity, outcome and feedback records against accreditation criteria and produces an auditable evidence assessment with explicit missing/incomplete proof. It never fabricates evidence.
+
+API: `POST /api/agents/accreditation-evidence/run` (optional `as_of_date`).
+
+The Industry Partners page now supports `POST /api/partners` and the Activities page supports `POST /api/activities` for institution-managed master/activity entry.
+
+## Guest Lecture Registry and Agent 5 Export
+
+Migration `database/migrations/004_guest_lecture_registry.sql` adds the dedicated
+`engagement.guest_lecture` table and `engagement.v_guest_lecture_register` view.
+It is additive: existing `engagement.industry_activity` guest lectures are not
+copied or changed. The new registry is for independently recorded guest lectures
+from alumni, industry experts, academics or other speakers; MoU and partner links
+are optional.
+
+Apply the migration to the existing PostgreSQL/Supabase database before using the
+Guest Lectures page or its API endpoints. The frontend exposes `/guest-lectures`.
+
+Agent 5 now includes evidenced standalone guest lectures in IND-2 and records the
+new table as an AgentOps input source. The Accreditation Evidence page's `Export
+report` button downloads the latest Agent 5 assessment as CSV from
+`GET /api/agents/accreditation-evidence/report.csv`.
