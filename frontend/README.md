@@ -103,3 +103,12 @@ The overall product story is:
 5. Connect the five AI-agent workflows.
 6. Add authentication / role-based access.
 7. Add real document upload and MoU extraction.
+
+## Guest lectures and Agent 5 export
+
+The `/guest-lectures` page is a dedicated registry for guest lectures that do not
+require an MoU. It supports alumni, industry experts, academics and other invited
+speakers, with optional partner/MoU traceability.
+
+The Accreditation Evidence page now has an `Export report` action. It downloads
+the latest Agent 5 accreditation assessment as CSV from the backend.

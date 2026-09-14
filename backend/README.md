@@ -323,3 +323,51 @@ POST /api/agents/mou-intelligence/run
 ```
 
 The endpoint requires `GEMINI_API_KEY` and an active `mou-1.0` model registration.
+
+## Agent 1 frontend + MoU upload
+
+The React MoU Intelligence page is connected to Agent 1. It supports:
+
+- viewing stored Agent 1 reports from `agentops.agent_output`
+- running Agent 1 for one existing MoU
+- uploading a new PDF MoU from the UI
+- storing the uploaded PDF as a `knowledge.document`
+- extracting readable PDF pages into `knowledge.document_chunk`
+- creating a `knowledge.extraction_job` for provenance
+- reusing or creating the matching `engagement.industry_partner`
+- creating the new `engagement.mou` linked to the document/job
+- automatically running Agent 1 on the new MoU
+- showing Gemini extraction, reconciliation flags, confidence and citations in the MoU detail page
+
+The upload endpoint is `POST /api/agents/mou-intelligence/upload` and accepts multipart form data. PDF files with no readable text are rejected with a clear message because OCR is not currently configured.
+
+Basic MoU metadata (partner name, title, partner type and signed date) is collected by the frontend because `engagement.mou.signed_on` is a required authoritative database field. The Agent 1 report remains a report-only output and does not overwrite authoritative MoU/deliverable data.
+
+## Agent 2 and Agent 5 runtime paths
+
+Agent 2 (`activities-2.0`) is the deterministic Activities / DO agent. It connects realised industry activities and placement outcomes to matching MoUs and deliverables, creating missing fulfilment links as `AGENT_SUGGESTED` / `SUGGESTED` rather than auto-confirming them.
+
+API: `POST /api/agents/activities-outcomes/run` (optional `as_of_date`).
+
+Agent 5 (`evidence-5.0`) is the deterministic Accreditation Evidence / PROVE agent. It evaluates authoritative MoU, activity, outcome and feedback records against accreditation criteria and produces an auditable evidence assessment with explicit missing/incomplete proof. It never fabricates evidence.
+
+API: `POST /api/agents/accreditation-evidence/run` (optional `as_of_date`).
+
+The Industry Partners page now supports `POST /api/partners` and the Activities page supports `POST /api/activities` for institution-managed master/activity entry.
+
+## Guest Lecture Registry and Agent 5 Export
+
+Migration `database/migrations/004_guest_lecture_registry.sql` adds the dedicated
+`engagement.guest_lecture` table and `engagement.v_guest_lecture_register` view.
+It is additive: existing `engagement.industry_activity` guest lectures are not
+copied or changed. The new registry is for independently recorded guest lectures
+from alumni, industry experts, academics or other speakers; MoU and partner links
+are optional.
+
+Apply the migration to the existing PostgreSQL/Supabase database before using the
+Guest Lectures page or its API endpoints. The frontend exposes `/guest-lectures`.
+
+Agent 5 now includes evidenced standalone guest lectures in IND-2 and records the
+new table as an AgentOps input source. The Accreditation Evidence page's `Export
+report` button downloads the latest Agent 5 assessment as CSV from
+`GET /api/agents/accreditation-evidence/report.csv`.
