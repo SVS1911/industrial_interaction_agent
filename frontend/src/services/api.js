@@ -6,7 +6,7 @@
  * existing React UI expects.
  */
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ||"").replace(/\/$/, "");
 
 function asNumber(value, fallback = 0) {
   const number = Number(value);

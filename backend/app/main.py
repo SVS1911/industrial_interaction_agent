@@ -36,6 +36,11 @@ from app.api.routes.mou_intelligence_upload import router as mou_intelligence_up
 from app.api.routes.agents_do_prove import router as agents_do_prove_router
 from app.api.routes.guest_lectures import router as guest_lectures_router
 
+from pathlib import Path
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 
 app = FastAPI(
     title=settings.app_name,
@@ -99,3 +104,26 @@ def root():
 @app.on_event("shutdown")
 def shutdown():
     close_pool()
+    
+# ============================================
+# Serve React frontend
+# ============================================
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+FRONTEND_DIST = BASE_DIR / "frontend_dist"
+
+if FRONTEND_DIST.exists():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=FRONTEND_DIST / "assets"),
+        name="assets",
+    )
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        requested_file = FRONTEND_DIST / full_path
+
+        if requested_file.is_file():
+            return FileResponse(requested_file)
+
+        return FileResponse(FRONTEND_DIST / "index.html")
