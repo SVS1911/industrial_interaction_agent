@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import close_pool
@@ -36,11 +40,18 @@ from app.api.routes.mou_intelligence_upload import router as mou_intelligence_up
 from app.api.routes.agents_do_prove import router as agents_do_prove_router
 from app.api.routes.guest_lectures import router as guest_lectures_router
 
-from pathlib import Path
 
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+# ============================================
+# React frontend location
+# ============================================
 
+BASE_DIR = Path(__file__).resolve().parents[2]
+FRONTEND_DIST = BASE_DIR / "frontend_dist"
+
+
+# ============================================
+# FastAPI application
+# ============================================
 
 app = FastAPI(
     title=settings.app_name,
@@ -48,6 +59,10 @@ app = FastAPI(
     description="Database/API foundation for Agent 28 — Industry Interaction Agent.",
 )
 
+
+# ============================================
+# CORS
+# ============================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +72,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# ============================================
+# API Routers
+# ============================================
 
 app.include_router(health_router)
 app.include_router(partners_router)
@@ -91,8 +110,15 @@ app.include_router(agents_do_prove_router)
 app.include_router(guest_lectures_router)
 
 
+# ============================================
+# Root endpoint
+# ============================================
+
 @app.get("/")
 def root():
+    if FRONTEND_DIST.exists():
+        return FileResponse(FRONTEND_DIST / "index.html")
+
     return {
         "service": settings.app_name,
         "status": "running",
@@ -101,21 +127,25 @@ def root():
     }
 
 
+# ============================================
+# Shutdown
+# ============================================
+
 @app.on_event("shutdown")
 def shutdown():
     close_pool()
-    
+
+
 # ============================================
 # Serve React frontend
 # ============================================
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-FRONTEND_DIST = BASE_DIR / "frontend_dist"
-
 if FRONTEND_DIST.exists():
     app.mount(
         "/assets",
-        StaticFiles(directory=FRONTEND_DIST / "assets"),
+        StaticFiles(
+            directory=FRONTEND_DIST / "assets"
+        ),
         name="assets",
     )
 
@@ -126,4 +156,6 @@ if FRONTEND_DIST.exists():
         if requested_file.is_file():
             return FileResponse(requested_file)
 
-        return FileResponse(FRONTEND_DIST / "index.html")
+        return FileResponse(
+            FRONTEND_DIST / "index.html"
+        )
