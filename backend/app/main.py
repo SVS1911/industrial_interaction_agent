@@ -45,7 +45,7 @@ from app.api.routes.guest_lectures import router as guest_lectures_router
 # React frontend location
 # ============================================
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+BASE_DIR = Path(__file__).resolve().parents[1]
 FRONTEND_DIST = BASE_DIR / "frontend_dist"
 
 
