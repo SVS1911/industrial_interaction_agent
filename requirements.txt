@@ -1,0 +1,43 @@
+# ============================================================
+# INDUSTRY INTERACTION AGENT - AGENT 28
+# Root Python Dependencies
+# ============================================================
+
+# ----------------------------
+# Web API / Backend
+# ----------------------------
+fastapi
+uvicorn[standard]
+
+# ----------------------------
+# Configuration / Environment
+# ----------------------------
+python-dotenv
+pydantic
+pydantic-settings
+
+# ----------------------------
+# Database - PostgreSQL / Supabase
+# ----------------------------
+psycopg[binary]
+psycopg-pool
+
+# ----------------------------
+# File Uploads
+# ----------------------------
+python-multipart
+
+# ----------------------------
+# HTTP / API Testing
+# ----------------------------
+httpx
+
+# ----------------------------
+# Google Gemini AI
+# ----------------------------
+google-genai
+
+# ----------------------------
+# Testing
+# ----------------------------
+pytest

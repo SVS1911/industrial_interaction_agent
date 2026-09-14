@@ -2968,6 +2968,16 @@ VALUES (pg_temp.uid('model:health-1.0'), pg_temp.uid('agent:A28'), 'health-1.0',
  '{"note": "Subject is an organisation; no person-level protected attributes are used."}',
  '2024-06-01', '2025-08-31', '2025-09-20', pg_temp.uid('user:dean.academics'), 'ACTIVE');
 
+-- Agent 1 Gemini-backed MoU intelligence model.
+INSERT INTO agentops.model_version (model_version_id, agent_id, version, model_type, feature_list, excluded_features, validated_on, status)
+SELECT gen_random_uuid(), a.agent_id, 'mou-1.0', 'LLM_PROMPT',
+       jsonb_build_object('provider','Google Gemini','model_env','GEMINI_MODEL','purpose','Semantic extraction and evidence citation from MoU source text','structured_output',true,'deterministic_reconciliation',true),
+       jsonb_build_object('note','LLM does not write engagement tables directly; authoritative database facts are reconciled after extraction.'),
+       NULL, 'ACTIVE'
+FROM agentops.agent a
+WHERE a.code = 'A28_INDUSTRY_INTERACTION' AND a.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM agentops.model_version mv WHERE mv.agent_id = a.agent_id AND mv.version = 'mou-1.0');
+
 -- Agent 4 deterministic recommendation model.
 INSERT INTO agentops.model_version (model_version_id, agent_id, version, model_type, feature_list, excluded_features, validated_on, status)
 SELECT gen_random_uuid(), a.agent_id, 'recommendation-1.0', 'RULE_BASED',

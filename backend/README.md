@@ -276,3 +276,50 @@ The run:
 7. Updates the partner's `engagement_score` and `last_activity_on`.
 
 The endpoint response contains the generated agent outputs directly. This is the first actual execution path; no fake LLM output is used.
+
+## Agent 1 — MoU Intelligence (Google Gemini)
+
+Agent 1 uses Google Gemini for semantic extraction from MoU document chunks, then performs deterministic reconciliation against the authoritative PostgreSQL records. It writes reports to `agentops.agent_output` and does not directly mutate `engagement.mou` or `engagement.mou_deliverable`.
+
+### Gemini configuration
+
+Add these server-side variables to `backend/.env`:
+
+```env
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+GEMINI_MODEL=gemini-3.8-flash
+```
+
+Never put the Gemini key in the frontend or commit it to source control.
+
+### Install
+
+```bash
+pip install -r requirements.txt
+```
+
+### Register Agent 1 model
+
+Against the existing PostgreSQL/Supabase database:
+
+```bash
+python scripts/register_agent1_model.py
+```
+
+or apply `database/migrations/003_agent1_mou_intelligence_model.sql` using the project's normal migration process.
+
+### Run Agent 1
+
+For one MoU:
+
+```text
+POST /api/agents/mou-intelligence/run?mou_id=<UUID>
+```
+
+For all MoUs with linked source documents:
+
+```text
+POST /api/agents/mou-intelligence/run
+```
+
+The endpoint requires `GEMINI_API_KEY` and an active `mou-1.0` model registration.
